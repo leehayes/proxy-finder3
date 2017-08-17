@@ -213,13 +213,18 @@ class ProxyFinder(object):
         results = []
         for fut in done:
             results.append(fut.result())
-        loop.close()
+        # loop.close()
         # results = list(itertools.chain(*results))
         return results
 
-
+    def refresh(self):
+        self.task_list_of_proxy_sourcing_functions = []
+        self.freeproxylist_uk_list = None
+        self.freeproxylist_us_list = None
+        self.gatherproxy_list = None
+        return self.proxy_details
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=1, gatherproxy=1)
+    pf = ProxyFinder(gimme=0, freeproxylistuk=0, freeproxylistus=0, gatherproxy=1)
     pprint(pf.list_of_proxies)
-
+    #pprint(pf.refresh())

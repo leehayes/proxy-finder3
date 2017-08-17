@@ -50,6 +50,13 @@ The results will be a list of dictionaries, providing the ip, port and url sourc
   'source': 'http://www.gatherproxy.com/'}]
 ```
 
+The results can be refreshed at any point, pulling the same number of requests for each proxy site and where available taking the newest proxy links available.
+
+```
+pprint(pf.refresh())
+```
+
+
 In the event of a proxy site hitting a limit, a dictionary will be returned with a message. Results for any other proxy requests will still be returned.
 ```
 [{'Limit Exceeded': 'gimmeproxy'},
