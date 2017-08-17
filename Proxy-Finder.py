@@ -49,13 +49,18 @@ class ProxyFinder(object):
     ########################
 
     async def view_gimmeproxy(self):
-        json = await self.get_page_json('http://gimmeproxy.com/api/getProxy')
-        return json
+        proxy_json = await self.get_page_json('http://gimmeproxy.com/api/getProxy'
+                                              '?get=true&post=true&supportsHttps=true&maxCheckPeriod=3600')
+        return proxy_json
 
     async def create_proxy_dict_gimmeproxy(self):
-        json = await self.view_gimmeproxy()
-        dict = {'ip': json.get('ip'), 'port': json.get('port'), 'source': 'http://gimmeproxy.com/api/getProxy'}
-        return dict
+        proxy_json = await self.view_gimmeproxy()
+        if proxy_json.get('status_code') == 429:
+            return None
+        proxy_dict = {'ip': proxy_json.get('ip'),
+                      'port': proxy_json.get('port'),
+                      'source': 'http://gimmeproxy.com/api/getProxy'}
+        return proxy_dict
 
     ########################
 
@@ -125,6 +130,9 @@ class ProxyFinder(object):
         :return: a list of dictionaries detailing proxy details
         '''
 
+        if not self.gimme + self.freeproxylist_uk + self.freeproxylist_us:
+            return "No sources selected"
+
         # Add Gimme tasks to task list
         for i in range(self.gimme):
             task = asyncio.ensure_future(self.create_proxy_dict_gimmeproxy())
@@ -153,5 +161,5 @@ class ProxyFinder(object):
 
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=1, freeproxylistuk=0, freeproxylistus=0)
+    pf = ProxyFinder(gimme=0, freeproxylistuk=1, freeproxylistus=1)
     pprint(pf.list_of_proxies)
