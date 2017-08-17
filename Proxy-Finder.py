@@ -20,11 +20,13 @@ class ProxyFinder(object):
     The primary class responsible for sourcing, storing and presenting proxy ips
     '''
 
-    def __init__(self, gimme=1, freeproxylist=1):
+    def __init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1):
         self.gimme = gimme
-        self.freeproxylist = freeproxylist
+        self.freeproxylist_uk = freeproxylistuk
+        self.freeproxylist_us = freeproxylistus
         self.lock = asyncio.Lock()
-        self.freeproxylist_soup = None
+        self.freeproxylist_uk_list = None
+        self.freeproxylist_us_list = None
         self.task_list_of_proxy_sourcing_functions = []
         self.list_of_proxies = self.proxy_details
 
@@ -54,34 +56,65 @@ class ProxyFinder(object):
         json = await self.view_gimmeproxy()
         dict = {'ip': json.get('ip'), 'port': json.get('port'), 'source': 'http://gimmeproxy.com/api/getProxy'}
         return dict
+
     ########################
 
-    async def view_freeproxylist(self):
+    async def view_freeproxylist_uk(self):
         html = await self.get_page_html('https://free-proxy-list.net/uk-proxy.html')
         return html
 
-    async def create_proxy_dict_freeproxylist(self):
+    async def create_proxy_dict_freeproxylist_uk(self, index):
         await self.lock.acquire()
-        if self.freeproxylist_soup == None:
-            html = await self.view_freeproxylist()
-            self.freeproxylist_soup = BeautifulSoup(html, "lxml")
-            soup = self.freeproxylist_soup
+        if self.freeproxylist_uk_list == None:
+            html = await self.view_freeproxylist_uk()
+            soup = BeautifulSoup(html, "lxml")
+
+            self.freeproxylist_uk_list = []
+            for table in soup.findAll('table', {'class': 'table'}):
+                for row in table.findAll('tr'):
+                    row_list = [cell.text for cell in row.findAll('td')]
+                    if row_list:
+                        proxy_dict = {}
+                        proxy_dict['source'] = 'https://free-proxy-list.net/uk-proxy.html'
+                        proxy_dict['ip'] = row_list[0]
+                        proxy_dict['port'] = row_list[1]
+                        self.freeproxylist_uk_list.append(proxy_dict)
+            self.lock.release()
         else:
-            soup = self.freeproxylist_soup
-        self.lock.release()
+            self.lock.release()
 
-        proxy_list = []
+        if index >= len(self.freeproxylist_uk_list):
+            return None
+        return self.freeproxylist_uk_list[index]
 
-        for table in soup.findAll('table', {'class': 'table'}):
-            for row in table.findAll('tr'):
-                row_list = [cell.text for cell in row.findAll('td')]
-                if row_list:
-                    proxy_dict = {'source': 'https://free-proxy-list.net/uk-proxy.html'}
-                    proxy_dict['ip'] = row_list[0]
-                    proxy_dict['port'] = row_list[1]
-                    proxy_list.append(proxy_dict)
+    ########################
 
-        return proxy_list[1]
+    async def view_freeproxylist_us(self):
+        html = await self.get_page_html('https://free-proxy-list.net/us-proxy.html')
+        return html
+
+    async def create_proxy_dict_freeproxylist_us(self, index):
+        await self.lock.acquire()
+        if self.freeproxylist_us_list == None:
+            html = await self.view_freeproxylist_us()
+            soup = BeautifulSoup(html, "lxml")
+            self.freeproxylist_us_list = []
+            for table in soup.findAll('table', {'id': 'proxylisttable'}):
+                for row in table.findAll('tr'):
+                    row_list = [cell.text for cell in row.findAll('td')]
+                    if row_list:
+                        proxy_dict = {}
+                        proxy_dict['source'] = 'https://free-proxy-list.net/us-proxy.html'
+                        proxy_dict['ip'] = row_list[0]
+                        proxy_dict['port'] = row_list[1]
+                        self.freeproxylist_us_list.append(proxy_dict)
+            self.lock.release()
+        else:
+            self.lock.release()
+
+        if index >= len(self.freeproxylist_us_list):
+            return None
+        return self.freeproxylist_us_list[index]
 
     ########################
 
@@ -97,10 +130,16 @@ class ProxyFinder(object):
             task = asyncio.ensure_future(self.create_proxy_dict_gimmeproxy())
             self.task_list_of_proxy_sourcing_functions.append(task)
 
-        # Add FreeProxyList tasks to task list
-        for i in range(self.freeproxylist):
-            task = asyncio.ensure_future(self.create_proxy_dict_freeproxylist())
+        # Add FreeProxyListuk tasks to task list
+        for i in range(self.freeproxylist_uk):
+            task = asyncio.ensure_future(self.create_proxy_dict_freeproxylist_uk(i))
             self.task_list_of_proxy_sourcing_functions.append(task)
+
+        # Add FreeProxyListus tasks to task list
+        for i in range(self.freeproxylist_us):
+            task = asyncio.ensure_future(self.create_proxy_dict_freeproxylist_us(i))
+            self.task_list_of_proxy_sourcing_functions.append(task)
+
 
         loop = asyncio.get_event_loop()
         done, _ = loop.run_until_complete(asyncio.wait(self.task_list_of_proxy_sourcing_functions))
@@ -114,5 +153,5 @@ class ProxyFinder(object):
 
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=1, freeproxylist=1)
+    pf = ProxyFinder(gimme=1, freeproxylistuk=0, freeproxylistus=0)
     pprint(pf.list_of_proxies)
