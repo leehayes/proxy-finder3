@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 from pprint import pprint
 
 import aiohttp
@@ -24,6 +25,14 @@ class ProxyFinder(object):
         self.gimme = gimme
         self.freeproxylist_uk = freeproxylistuk
         self.freeproxylist_us = freeproxylistus
+        self.user_agent = [
+            "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/601.6.17 (KHTML, like Gecko) Version/9.1.1 Safari/601.6.17",
+            "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko"
+        ]
         self.lock = asyncio.Lock()
         self.freeproxylist_uk_list = None
         self.freeproxylist_us_list = None
@@ -33,7 +42,8 @@ class ProxyFinder(object):
 
     async def get_page_json(self, url):
         async with aiohttp.ClientSession() as session:
-            response = await session.request('GET', url)
+            user_agent = {"User:Agent": random.choice(self.user_agent)}
+            response = await session.request('GET', url, headers=user_agent)
             body = await response.read()
             body = body.decode("utf-8")
             json_res = json.loads(body)
@@ -41,7 +51,8 @@ class ProxyFinder(object):
 
     async def get_page_html(self, url):
         async with aiohttp.ClientSession() as session:
-            response = await session.request('GET', url)
+            user_agent = {"User:Agent": random.choice(self.user_agent)}
+            response = await session.request('GET', url, headers=user_agent)
             body = await response.read()
             html_res = body.decode("utf-8")
             return html_res
@@ -56,7 +67,7 @@ class ProxyFinder(object):
     async def create_proxy_dict_gimmeproxy(self):
         proxy_json = await self.view_gimmeproxy()
         if proxy_json.get('status_code') == 429:
-            return None
+            return 'Limit Exceeded'
         proxy_dict = {'ip': proxy_json.get('ip'),
                       'port': proxy_json.get('port'),
                       'source': 'http://gimmeproxy.com/api/getProxy'}
@@ -161,5 +172,7 @@ class ProxyFinder(object):
 
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=0, freeproxylistuk=1, freeproxylistus=1)
+    pf = ProxyFinder(gimme=0, freeproxylistuk=2, freeproxylistus=2)
     pprint(pf.list_of_proxies)
+
+    # TODO: http://www.gatherproxy.com/
