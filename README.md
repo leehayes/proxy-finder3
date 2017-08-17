@@ -1,7 +1,8 @@
 # proxy-finder3
 Python 3 library for sourcing proxy settings
 
-Finds elite anonymity (L1) HTTP proxies then tests them all in parallel. Tests each proxy against 3 IP checking URLs including one which is HTTPS to make sure it can handle HTTPS requests. Then checks the proxy headers to confirm it's an elite L1 proxy that will not leak any extra info. By default the script will only print the proxy IP, request time, and country code of proxies that pass all four tests but you can see all the results including errors in any of the tests with the -a (--all) option. 
+Finds elite anonymity (L1) HTTP proxies asynchronously. The validity or speed of the proxies is not tested.
+ 
 
 Requirements:
 ------
