@@ -21,10 +21,19 @@ class ProxyFinder(object):
     The primary class responsible for sourcing, storing and presenting proxy ips
     '''
 
-    def __init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1):
+    def __init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1, gatherproxy=1):
+        '''
+        ProxyFinder creates an instance that retrieves proxy details from the sources provided.
+        If you wish to ignore a particular source, then provide it with the value 0.
+        The default is one proxy from each source:
+        :param gimme: http://gimmeproxy.com/api/getProxy?get=true&post=true&supportsHttps=true&maxCheckPeriod=3600
+        :param freeproxylistuk: https://free-proxy-list.net/uk-proxy.html
+        :param freeproxylistus: https://free-proxy-list.net/us-proxy.html
+        '''
         self.gimme = gimme
         self.freeproxylist_uk = freeproxylistuk
         self.freeproxylist_us = freeproxylistus
+        self.gatherproxy = gatherproxy
         self.user_agent = [
             "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
@@ -34,11 +43,12 @@ class ProxyFinder(object):
             "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko"
         ]
         self.lock = asyncio.Lock()
+        # sites which provide tables or proxies will need to store the table as a list
         self.freeproxylist_uk_list = None
         self.freeproxylist_us_list = None
+        self.gatherproxy_list = None
         self.task_list_of_proxy_sourcing_functions = []
         self.list_of_proxies = self.proxy_details
-
 
     async def get_page_json(self, url):
         async with aiohttp.ClientSession() as session:
@@ -134,6 +144,39 @@ class ProxyFinder(object):
 
     ########################
 
+    async def view_gatherproxy(self):
+        html = await self.get_page_html('http://www.gatherproxy.com/')
+        return html
+
+    async def create_proxy_dict_gatherproxy(self, index):
+        await self.lock.acquire()
+        if self.gatherproxy_list == None:
+            html = await self.view_gatherproxy()
+            soup = BeautifulSoup(html, "lxml")
+            self.gatherproxy_list = []
+
+            for table in soup.findAll('table', {'id': 'tblproxy'}):
+                for row in table.findAll('script', {'type': 'text/javascript'}):
+                    haystack = row.text
+                    list_colon_loc = [(index) for index, needle in enumerate(haystack) if needle == ":"]
+                    list_comma_loc = [(index) for index, needle in enumerate(haystack) if needle == ","]
+
+                    proxy_dict = {}
+                    proxy_dict['source'] = 'http://www.gatherproxy.com/'
+                    proxy_dict['ip'] = haystack[list_colon_loc[2] + 2:list_comma_loc[2] - 1]
+                    proxy_dict['port'] = str(int(haystack[list_colon_loc[4] + 2:list_comma_loc[4] - 1], 16))
+                    self.gatherproxy_list.append(proxy_dict)
+
+            self.lock.release()
+        else:
+            self.lock.release()
+
+        if index >= len(self.gatherproxy_list):
+            return None
+        return self.gatherproxy_list[index]
+
+    ########################
+
     @property
     def proxy_details(self):
         '''
@@ -141,7 +184,7 @@ class ProxyFinder(object):
         :return: a list of dictionaries detailing proxy details
         '''
 
-        if not self.gimme + self.freeproxylist_uk + self.freeproxylist_us:
+        if not self.gimme + self.freeproxylist_uk + self.freeproxylist_us + self.gatherproxy:
             return "No sources selected"
 
         # Add Gimme tasks to task list
@@ -149,14 +192,19 @@ class ProxyFinder(object):
             task = asyncio.ensure_future(self.create_proxy_dict_gimmeproxy())
             self.task_list_of_proxy_sourcing_functions.append(task)
 
-        # Add FreeProxyListuk tasks to task list
+        # Add FreeProxyListUk tasks to task list
         for i in range(self.freeproxylist_uk):
             task = asyncio.ensure_future(self.create_proxy_dict_freeproxylist_uk(i))
             self.task_list_of_proxy_sourcing_functions.append(task)
 
-        # Add FreeProxyListus tasks to task list
+        # Add FreeProxyListUs tasks to task list
         for i in range(self.freeproxylist_us):
             task = asyncio.ensure_future(self.create_proxy_dict_freeproxylist_us(i))
+            self.task_list_of_proxy_sourcing_functions.append(task)
+
+        # Add GatherProxy tasks to task list
+        for i in range(self.gatherproxy):
+            task = asyncio.ensure_future(self.create_proxy_dict_gatherproxy(i))
             self.task_list_of_proxy_sourcing_functions.append(task)
 
 
@@ -172,7 +220,6 @@ class ProxyFinder(object):
 
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=1)
+    pf = ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=1, gatherproxy=1)
     pprint(pf.list_of_proxies)
 
-    # TODO: http://www.gatherproxy.com/

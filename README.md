@@ -21,14 +21,14 @@ pip install beautifulsoup4
 Usage:
 ------
 ```
-    pf = ProxyFinder(gimme=0, freeproxylistuk=2, freeproxylistus=2)
+    pf = ProxyFinder(gimme=0, freeproxylistuk=2, freeproxylistus=2, gatherproxy=1)
     pprint(pf.list_of_proxies)
 ```
 
 ProxyFinder creates an instance that retrieves proxy details from the sources provided. If you wish to ignore a particular source, then provide it with the value 0.
 The default is one proxy from each source:
 ```
-__init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1)
+__init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1, gatherproxy=1)
 ```
 
 If the source is a table of many proxy urls, it will scrape the whole table but only return the number of results requested.
@@ -44,7 +44,10 @@ The results will be a list of dictionaries, providing the ip, port and url sourc
   'source': 'https://free-proxy-list.net/us-proxy.html'},
  {'ip': '173.213.113.111',
   'port': '8089',
-  'source': 'https://free-proxy-list.net/us-proxy.html'}]
+  'source': 'https://free-proxy-list.net/us-proxy.html'},
+  {'ip': '94.23.81.70',
+  'port': 8081,
+  'source': 'http://www.gatherproxy.com/'}]
 ```
 
 In the event of a proxy site hitting a limit, a dictionary will be returned with a message. Results for any other proxy requests will still be returned.
