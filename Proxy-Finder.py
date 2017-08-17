@@ -51,6 +51,11 @@ class ProxyFinder(object):
         self.list_of_proxies = self.proxy_details
 
     async def get_page_json(self, url):
+        '''
+        Async method to return json from a url
+        :param url: Full url, must point to a data source in json format
+        :return: Pythonic representation of a json file
+        '''
         async with aiohttp.ClientSession() as session:
             user_agent = {"User:Agent": random.choice(self.user_agent)}
             response = await session.request('GET', url, headers=user_agent)
@@ -60,6 +65,11 @@ class ProxyFinder(object):
             return json_res
 
     async def get_page_html(self, url):
+        '''
+        Async method to return html from a url
+        :param url: Full url, must point to a data source in html format
+        :return: html as string
+        '''
         async with aiohttp.ClientSession() as session:
             user_agent = {"User:Agent": random.choice(self.user_agent)}
             response = await session.request('GET', url, headers=user_agent)
@@ -70,11 +80,19 @@ class ProxyFinder(object):
     ########################
 
     async def view_gimmeproxy(self):
+        '''
+        Call the url of the website containing proxies. In this case, a single proxy in json format
+        :return: Pythonic representation of a json file
+        '''
         proxy_json = await self.get_page_json('http://gimmeproxy.com/api/getProxy'
                                               '?get=true&post=true&supportsHttps=true&maxCheckPeriod=3600')
         return proxy_json
 
     async def create_proxy_dict_gimmeproxy(self):
+        '''
+        Create a dictionary of, in this case, a single proxy
+        :return: A dictionary containing the proxy ip, port and source url
+        '''
         proxy_json = await self.view_gimmeproxy()
         if proxy_json.get('status_code') == 429:
             return {'Limit Exceeded': 'gimmeproxy'}
@@ -86,10 +104,21 @@ class ProxyFinder(object):
     ########################
 
     async def view_freeproxylist_uk(self):
+        '''
+        Call the url of the website containing a html table of proxy details
+        :return: html as a string
+        '''
         html = await self.get_page_html('https://free-proxy-list.net/uk-proxy.html')
         return html
 
     async def create_proxy_dict_freeproxylist_uk(self, index):
+        '''
+        When this method runs for the first time it downloads and stores the data taken from the results table.
+        All further instances of this method use this stored data which is held until the refresh method is called.
+        The final step is to select a row, using index.
+        :param index: The row of the table to take.
+        :return: A dictionary representing a single proxy address. IP, Port and Source URL
+        '''
         await self.lock.acquire()
         if self.freeproxylist_uk_list == None:
             html = await self.view_freeproxylist_uk()
@@ -116,10 +145,21 @@ class ProxyFinder(object):
     ########################
 
     async def view_freeproxylist_us(self):
+        '''
+        Call the url of the website containing a html table of proxy details
+        :return: html as a string
+        '''
         html = await self.get_page_html('https://free-proxy-list.net/us-proxy.html')
         return html
 
     async def create_proxy_dict_freeproxylist_us(self, index):
+        '''
+        When this method runs for the first time it downloads and stores the data taken from the results table.
+        All further instances of this method use this stored data which is held until the refresh method is called.
+        The final step is to select a row, using index.
+        :param index: The row of the table to take.
+        :return: A dictionary representing a single proxy address. IP, Port and Source URL
+        '''
         await self.lock.acquire()
         if self.freeproxylist_us_list == None:
             html = await self.view_freeproxylist_us()
@@ -145,10 +185,21 @@ class ProxyFinder(object):
     ########################
 
     async def view_gatherproxy(self):
+        '''
+        Call the url of the website containing a html table of proxy details
+        :return: html as a string
+        '''
         html = await self.get_page_html('http://www.gatherproxy.com/')
         return html
 
     async def create_proxy_dict_gatherproxy(self, index):
+        '''
+        When this method runs for the first time it downloads and stores the data taken from the results table.
+        All further instances of this method use this stored data which is held until the refresh method is called.
+        The final step is to select a row, using index.
+        :param index: The row of the table to take.
+        :return: A dictionary representing a single proxy address. IP, Port and Source URL
+        '''
         await self.lock.acquire()
         if self.gatherproxy_list == None:
             html = await self.view_gatherproxy()
@@ -158,8 +209,8 @@ class ProxyFinder(object):
             for table in soup.findAll('table', {'id': 'tblproxy'}):
                 for row in table.findAll('script', {'type': 'text/javascript'}):
                     haystack = row.text
-                    list_colon_loc = [(index) for index, needle in enumerate(haystack) if needle == ":"]
-                    list_comma_loc = [(index) for index, needle in enumerate(haystack) if needle == ","]
+                    list_colon_loc = [index for index, needle in enumerate(haystack) if needle == ":"]
+                    list_comma_loc = [index for index, needle in enumerate(haystack) if needle == ","]
 
                     proxy_dict = {}
                     proxy_dict['source'] = 'http://www.gatherproxy.com/'
@@ -180,7 +231,7 @@ class ProxyFinder(object):
     @property
     def proxy_details(self):
         '''
-        Return proxy ips for .....
+        Extract proxy details from the source urls
         :return: a list of dictionaries detailing proxy details
         '''
 
