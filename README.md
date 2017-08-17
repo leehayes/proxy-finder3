@@ -24,7 +24,8 @@ Usage:
     pprint(pf.list_of_proxies)
 ```
 
-ProxyFinder creates an instance that retrieves proxy details from the sources provided. The default is one from each source:
+ProxyFinder creates an instance that retrieves proxy details from the sources provided. If you wish to ignore a particular source, then provide it with the value 0.
+The default is one proxy from each source:
 ```
 __init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1)
 ```
