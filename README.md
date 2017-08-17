@@ -24,7 +24,23 @@ Usage:
     pprint(pf.list_of_proxies)
 ```
 
+ProxyFinder creates an instance that retrieves proxy details from the sources provided.
 
+If the source is a table, it will scrape the whole table but only return the number of results requested.
+
+The results will be a list of dictionaries, providing the ip, port and url source
+
+```
+ {'ip': '46.101.72.53',
+  'port': '8118',
+  'source': 'https://free-proxy-list.net/uk-proxy.html'},
+ {'ip': '50.2.64.206',
+  'port': '7808',
+  'source': 'https://free-proxy-list.net/us-proxy.html'},
+ {'ip': '173.213.113.111',
+  'port': '8089',
+  'source': 'https://free-proxy-list.net/us-proxy.html'}]
+```
 
 License
 -------
