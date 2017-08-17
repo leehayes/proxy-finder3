@@ -52,11 +52,8 @@ class ProxyFinder(object):
 
     async def create_proxy_dict_gimmeproxy(self):
         json = await self.view_gimmeproxy()
-        dict = json
-        return {'ip': dict.get('ip'), 'port': dict.get('port'), 'source': 'http://gimmeproxy.com/api/getProxy'}
-        # return dict.keys()
-        # 'supportsHttps', 'protocol', 'ip', 'port', 'get', 'post', 'cookies', 'referer', 'user-agent', 'anonymityLevel', 'websites', 'country', 'tsChecked', 'curl', 'ipPort', 'type', 'speed', 'otherProtocols']
-
+        dict = {'ip': json.get('ip'), 'port': json.get('port'), 'source': 'http://gimmeproxy.com/api/getProxy'}
+        return dict
     ########################
 
     async def view_freeproxylist(self):
@@ -68,16 +65,23 @@ class ProxyFinder(object):
         if self.freeproxylist_soup == None:
             html = await self.view_freeproxylist()
             self.freeproxylist_soup = BeautifulSoup(html, "lxml")
-            bs = self.freeproxylist_soup
+            soup = self.freeproxylist_soup
         else:
-            bs = self.freeproxylist_soup
+            soup = self.freeproxylist_soup
         self.lock.release()
-        # print(bs)
-        # table = bs.find(lambda tag: tag.name == 'table' and tag.has_key('id') and tag['id'] == "Table1")
-        # rows = table.findAll(lambda tag: tag.name == 'tr')
 
-        dict = "test"  # bs
-        return {'ip': dict, 'source': 'https://free-proxy-list.net/uk-proxy.html'}
+        proxy_list = []
+
+        for table in soup.findAll('table', {'class': 'table'}):
+            for row in table.findAll('tr'):
+                row_list = [cell.text for cell in row.findAll('td')]
+                if row_list:
+                    proxy_dict = {'source': 'https://free-proxy-list.net/uk-proxy.html'}
+                    proxy_dict['ip'] = row_list[0]
+                    proxy_dict['port'] = row_list[1]
+                    proxy_list.append(proxy_dict)
+
+        return proxy_list[1]
 
     ########################
 
@@ -104,10 +108,11 @@ class ProxyFinder(object):
         for fut in done:
             results.append(fut.result())
         loop.close()
+        # results = list(itertools.chain(*results))
         return results
 
 
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=0, freeproxylist=10)
+    pf = ProxyFinder(gimme=1, freeproxylist=1)
     pprint(pf.list_of_proxies)
