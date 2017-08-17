@@ -36,7 +36,7 @@ If the source is a table of many proxy urls, it will scrape the whole table but 
 The results will be a list of dictionaries, providing the ip, port and url source
 
 ```
- {'ip': '46.101.72.53',
+ [{'ip': '46.101.72.53',
   'port': '8118',
   'source': 'https://free-proxy-list.net/uk-proxy.html'},
  {'ip': '50.2.64.206',
