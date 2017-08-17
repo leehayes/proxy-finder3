@@ -67,7 +67,7 @@ class ProxyFinder(object):
     async def create_proxy_dict_gimmeproxy(self):
         proxy_json = await self.view_gimmeproxy()
         if proxy_json.get('status_code') == 429:
-            return 'Limit Exceeded'
+            return {'Limit Exceeded': 'gimmeproxy'}
         proxy_dict = {'ip': proxy_json.get('ip'),
                       'port': proxy_json.get('port'),
                       'source': 'http://gimmeproxy.com/api/getProxy'}
@@ -172,7 +172,7 @@ class ProxyFinder(object):
 
 
 if __name__ == "__main__":
-    pf = ProxyFinder(gimme=0, freeproxylistuk=2, freeproxylistus=2)
+    pf = ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=1)
     pprint(pf.list_of_proxies)
 
     # TODO: http://www.gatherproxy.com/

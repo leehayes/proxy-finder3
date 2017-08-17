@@ -24,9 +24,12 @@ Usage:
     pprint(pf.list_of_proxies)
 ```
 
-ProxyFinder creates an instance that retrieves proxy details from the sources provided.
+ProxyFinder creates an instance that retrieves proxy details from the sources provided. The default is one from each source:
+```
+__init__(self, gimme=1, freeproxylistuk=1, freeproxylistus=1)
+```
 
-If the source is a table, it will scrape the whole table but only return the number of results requested.
+If the source is a table of many proxy urls, it will scrape the whole table but only return the number of results requested.
 
 The results will be a list of dictionaries, providing the ip, port and url source
 
@@ -41,6 +44,18 @@ The results will be a list of dictionaries, providing the ip, port and url sourc
   'port': '8089',
   'source': 'https://free-proxy-list.net/us-proxy.html'}]
 ```
+
+In the event of a proxy site hitting a limit, a dictionary will be returned with a message. Results for any other proxy requests will still be returned.
+```
+[{'Limit Exceeded': 'gimmeproxy'},
+ {'ip': '139.59.168.33',
+  'port': '8118',
+  'source': 'https://free-proxy-list.net/uk-proxy.html'},
+ {'ip': '173.213.113.111',
+  'port': '8089',
+  'source': 'https://free-proxy-list.net/us-proxy.html'}]
+```
+
 
 License
 -------
