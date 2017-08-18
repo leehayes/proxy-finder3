@@ -1,7 +1,7 @@
 # proxy-finder3
 Python 3 library for sourcing proxy settings
 
-Finds elite anonymity (L1) HTTP proxies asynchronously. The validity or speed of the proxies is not tested.
+Scrapes elite anonymity (L1) HTTP proxies from four sources asynchronously. The validity or speed of the proxies is not tested.
  
 
 Requirements:
