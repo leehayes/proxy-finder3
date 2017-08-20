@@ -11,6 +11,13 @@ class TestProxyFinder(TestCase):
         self.pf = ProxyFinder()
         self.loop = asyncio.get_event_loop()
 
+    def test_repr(self):
+        self.pf2 = ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=2, gatherproxy=2)
+        assert_that(repr(self.pf),
+                    equal_to("ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=1, gatherproxy=1)"))
+        assert_that(repr(self.pf2),
+                    equal_to("ProxyFinder(gimme=1, freeproxylistuk=1, freeproxylistus=2, gatherproxy=2)"))
+
     def test_get_page_json(self):
         task_list = [asyncio.ensure_future(self.pf.get_page_json('https://jsonplaceholder.typicode.com/posts'))]
         done, _ = self.loop.run_until_complete(asyncio.wait(task_list))

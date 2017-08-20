@@ -48,6 +48,12 @@ class ProxyFinder(object):
         self.gatherproxy_list = None
         self.task_list_of_proxy_sourcing_functions = []
 
+    def __repr__(self):
+        return 'ProxyFinder(gimme={}, freeproxylistuk={}, freeproxylistus={}, gatherproxy={})'.format(self.gimme,
+                                                                                                      self.freeproxylist_uk,
+                                                                                                      self.freeproxylist_us,
+                                                                                                      self.gatherproxy)
+
     async def get_page_json(self, url):
         """
         Async method to return json from a url
@@ -271,4 +277,4 @@ class ProxyFinder(object):
 
 
 pf = ProxyFinder()
-print(len(pf.proxy_details))
+print(pf)
